@@ -1,0 +1,43 @@
+# .NET build output
+**/bin/
+**/obj/
+
+# Visual Studio / Rider / VSCode config
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Test results
+TestResults/
+**/*.TestResults.xml
+*.trx
+
+# Auto-generated files
+*.ncrunch*
+*.build.csdef
+*.cache
+*.pdb
+*.log
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# dotnet pack artifacts
+*.nupkg
+*.snupkg
+
+# Rider settings (optional)
+*.DotSettings.user
+.idea/
+
+# local secrets and config overrides
+**/appsettings.Development.json
+secrets.json
+
+# Resharper files (optional)
+_ReSharper*/
+*.DotSettings.user
