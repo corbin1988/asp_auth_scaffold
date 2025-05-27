@@ -1,3 +1,5 @@
+using Npgsql; 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -23,7 +25,7 @@ var summaries = new[]
 
 app.MapGet("/weatherforecast", () =>
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
+    var forecast = Enumerable.Range(1, 5).Select(index =>
         new WeatherForecast
         (
             DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
@@ -35,6 +37,23 @@ app.MapGet("/weatherforecast", () =>
 })
 .WithName("GetWeatherForecast")
 .WithOpenApi();
+
+app.MapGet("/dbtest", async (IConfiguration config) =>
+{
+    var connStr = config.GetConnectionString("DefaultConnection");
+    try
+    {
+        await using var conn = new NpgsqlConnection(connStr);
+        await conn.OpenAsync();
+        await using var cmd = new NpgsqlCommand("SELECT version();", conn);
+        var version = await cmd.ExecuteScalarAsync();
+        return Results.Ok(new { status = "success", version });
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem($"Database connection failed: {ex.Message}");
+    }
+});
 
 app.Run();
 
