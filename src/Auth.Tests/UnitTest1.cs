@@ -1,5 +1,6 @@
 namespace Auth.Tests;
 
+[TestFixture]
 public class Tests
 {
     [SetUp]

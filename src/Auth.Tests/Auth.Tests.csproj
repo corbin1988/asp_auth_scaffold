@@ -28,4 +28,8 @@
         <ProjectReference Include="..\Auth.Core\Auth.Core.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Integration\" />
+    </ItemGroup>
+
 </Project>
