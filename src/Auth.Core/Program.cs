@@ -65,7 +65,6 @@ app.MapGet("/dbtest", async (AppDbContext db) =>
         {
             user.Id,
             user.Email
-            // Do not return PasswordHash for security reasons
         }
     });
 });

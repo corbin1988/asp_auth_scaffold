@@ -1,4 +1,5 @@
 using Auth.Core.Modules.Shared.Database;
+using Auth.Core.Modules.User.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Auth.Tests.Unit;
@@ -6,8 +7,6 @@ namespace Auth.Tests.Unit;
 [TestFixture]
 public class AppDbContextTests : IDisposable
 {
-    private AppDbContext _context = null!;
-
     [SetUp]
     public void Setup()
     {
@@ -20,11 +19,19 @@ public class AppDbContextTests : IDisposable
         // Optionally seed data here
     }
 
+    [TearDown]
+    public void TearDown()
+    {
+        _context.Dispose();
+    }
+
+    private AppDbContext _context = null!;
+
     [Test]
     public void CanAddUser()
     {
         // Arrange
-        var user = new Auth.Core.Modules.User.Entities.UserEntity
+        var user = new UserEntity
         {
             Email = "test@example.com",
             PasswordHash = "hash"
@@ -36,12 +43,6 @@ public class AppDbContextTests : IDisposable
 
         // Assert
         Assert.That(_context.Users.Any(u => u.Email == "test@example.com"), Is.True);
-    }
-
-    [TearDown]
-    public void TearDown()
-    {
-        _context.Dispose();
     }
 
     public void Dispose()
