@@ -1,4 +1,6 @@
-using Npgsql; 
+using Auth.Core.Modules.Shared.Database;
+using Auth.Core.Modules.Shared.Database.Seed;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,7 +9,19 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+
 var app = builder.Build();
+
+// Seed the database
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("DatabaseSeeder");
+    await DatabaseSeeder.SeedAsync(db, logger);
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -24,40 +38,41 @@ var summaries = new[]
 };
 
 app.MapGet("/weatherforecast", () =>
-{
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
+    {
+        var forecast = Enumerable.Range(1, 5).Select(index =>
+                new WeatherForecast
+                (
+                    DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+                    Random.Shared.Next(-20, 55),
+                    summaries[Random.Shared.Next(summaries.Length)]
+                ))
+            .ToArray();
+        return forecast;
+    })
+    .WithName("GetWeatherForecast")
+    .WithOpenApi();
 
-app.MapGet("/dbtest", async (IConfiguration config) =>
+app.MapGet("/dbtest", async (AppDbContext db) =>
 {
-    var connStr = config.GetConnectionString("DefaultConnection");
-    try
+    var user = await db.Users.FirstOrDefaultAsync();
+    if (user == null)
+        return Results.NotFound(new { status = "no users found" });
+
+    return Results.Ok(new
     {
-        await using var conn = new NpgsqlConnection(connStr);
-        await conn.OpenAsync();
-        await using var cmd = new NpgsqlCommand("SELECT version();", conn);
-        var version = await cmd.ExecuteScalarAsync();
-        return Results.Ok(new { status = "success", version });
-    }
-    catch (Exception ex)
-    {
-        return Results.Problem($"Database connection failed: {ex.Message}");
-    }
+        status = "success",
+        user = new
+        {
+            user.Id,
+            user.Email
+            // Do not return PasswordHash for security reasons
+        }
+    });
 });
 
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
+internal record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
 }
