@@ -1,3 +1,4 @@
+using Auth.Core.Modules.Auth;
 using Auth.Core.Modules.Shared.Database;
 using Auth.Core.Modules.Shared.Database.Seed;
 using Microsoft.EntityFrameworkCore;
@@ -5,15 +6,21 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddControllers(); // Ensure this line is added
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddAuthModule();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-
 var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+app.UseRouting();
+app.UseAuthorization();
+
+app.MapControllers(); // Ensure this line is present
 
 // Seed the database
 using (var scope = app.Services.CreateScope())
@@ -23,7 +30,6 @@ using (var scope = app.Services.CreateScope())
     await DatabaseSeeder.SeedAsync(db, logger);
 }
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
