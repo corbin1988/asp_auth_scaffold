@@ -47,6 +47,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 var app = builder.Build();
 
 app.UseRouting();
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
@@ -89,5 +90,12 @@ app.MapPost("/generate-token", (IConfiguration config) =>
 
     return Results.Ok(new { Token = tokenString });
 });
+
+// Protected route
+app.MapGet("/protected", (ClaimsPrincipal user) =>
+{
+    var email = user.FindFirstValue(ClaimTypes.Email);
+    return $"This is a protected endpoint. Welcome, {email}!";
+}).RequireAuthorization();
 
 app.Run();
