@@ -24,4 +24,22 @@ public class AuthController : ControllerBase
 
         return Ok(new { message = "User registered successfully" });
     }
+
+    [HttpPost("login")]
+    public async Task<IActionResult> Login(
+        [FromBody] LoginDto dto,
+        [FromServices] IValidator<LoginDto> validator,
+        [FromServices] IUserService userService)
+    {
+        var validationResult = await validator.ValidateAsync(dto);
+        if (ValidationHelper.HandleValidationResult(validationResult) is { } validationResponse)
+            return validationResponse;
+
+        var token = await userService.LoginAsync(dto);
+
+        if (token == null)
+            return Unauthorized(new { message = "Invalid credentials" });
+
+        return Ok(new { token });
+    }
 }

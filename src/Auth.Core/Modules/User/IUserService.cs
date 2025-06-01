@@ -5,4 +5,5 @@ namespace Auth.Core.Modules.User;
 public interface IUserService
 {
     Task CreateUserAsync(RegisterDto dto);
+    Task<string?> LoginAsync(LoginDto dto);
 }
