@@ -1,28 +1,34 @@
 using Auth.Core.Modules.Auth;
 using Auth.Core.Modules.Shared.Database;
 using Auth.Core.Modules.Shared.Database.Seed;
+using Auth.Core.Modules.Shared.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllers(); // Ensure this line is added
+// Add services to the container
+builder.Services.AddControllers()
+    .ConfigureApiBehaviorOptions(options => { options.SuppressModelStateInvalidFilter = true; });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Custom modules
+builder.Services.AddUserServices();
 builder.Services.AddAuthModule();
 
+// EF Core
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+
+// Required app pipeline setup
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 app.UseRouting();
 app.UseAuthorization();
+app.MapControllers();
 
-app.MapControllers(); // Ensure this line is present
-
-// Seed the database
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -30,6 +36,7 @@ using (var scope = app.Services.CreateScope())
     await DatabaseSeeder.SeedAsync(db, logger);
 }
 
+// Swagger for dev only
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -38,6 +45,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Sample test routes
 var summaries = new[]
 {
     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
@@ -46,13 +54,13 @@ var summaries = new[]
 app.MapGet("/weatherforecast", () =>
     {
         var forecast = Enumerable.Range(1, 5).Select(index =>
-                new WeatherForecast
-                (
+                new WeatherForecast(
                     DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
                     Random.Shared.Next(-20, 55),
                     summaries[Random.Shared.Next(summaries.Length)]
                 ))
             .ToArray();
+
         return forecast;
     })
     .WithName("GetWeatherForecast")

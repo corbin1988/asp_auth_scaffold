@@ -1,4 +1,6 @@
 using Auth.Core.Modules.Auth.DTOs;
+using Auth.Core.Modules.User;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Auth.Core.Modules.Auth;
@@ -8,11 +10,14 @@ namespace Auth.Core.Modules.Auth;
 public class AuthController : ControllerBase
 {
     [HttpPost("register")]
-    public IActionResult Register([FromBody] RegisterDto dto)
+    public async Task<IActionResult> Register(
+        [FromBody] RegisterDto dto,
+        [FromServices] IValidator<RegisterDto> validator)
     {
-        // Simulate registration logic
-        var result = new { Success = true, Message = "User registered successfully" };
+        var validationResult = await validator.ValidateAsync(dto);
+        if (ValidationHelper.HandleValidationResult(validationResult) is { } validationResponse)
+            return validationResponse;
 
-        return Ok(new { message = result.Message });
+        return Ok(new { message = "User registered successfully" });
     }
 }

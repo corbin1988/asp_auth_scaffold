@@ -5,7 +5,7 @@ using Auth.Core.Modules.Auth.DTOs;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 
-namespace Auth.Tests.Integration;
+namespace Auth.Tests.Integration.Auth;
 
 [TestFixture]
 public class AuthControllerTests
@@ -33,7 +33,7 @@ public class AuthControllerTests
         // Arrange
         var dto = new RegisterDto
         {
-            Username = "John Doe",
+            Email = "joe@example.com",
             Password = "password123"
         };
 
@@ -53,7 +53,7 @@ public class AuthControllerTests
         // Arrange
         var dto = new RegisterDto
         {
-            Username = "", // Invalid username
+            Email = "",
             Password = "123" // Invalid password
         };
 
